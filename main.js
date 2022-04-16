@@ -3,7 +3,7 @@ let fs = require('fs');
 let url = require("url");
 let qs = require("querystring");
 
-const templateHTML = (title, list, body) => {
+const templateHTML = (title, list, body, control) => {
   return `<!doctype html>
   <html>
     <head>
@@ -13,7 +13,7 @@ const templateHTML = (title, list, body) => {
     <body>
       <h1><a href="/">WEB</a></h1>
       ${list}
-      <a href="/create">create</a>
+      ${control}
       ${body}
     </body>
   </html>`;
@@ -44,8 +44,9 @@ let app = http.createServer((request,response) => {
           let title = "welcome";
           let description = "hello, Node.js";
           let list = templateList(fileList);
-          let template = templateHTML(title, list, `<h2>${title}</h2>${description}`);
-
+          let template = templateHTML(title, list, 
+            `<h2>${title}</h2>${description}`, 
+            `<a href="/create">create</a>`);
           response.writeHead(200);
           response.end(template);
         });
@@ -55,7 +56,9 @@ let app = http.createServer((request,response) => {
           fs.readFile(`data/${queryData.get("id")}`, 'utf8', (err, description) => {
             let title = queryData.get("id");
             let list = templateList(fileList);
-            let template = templateHTML(title, list, `<h2>${title}</h2>${description}`);
+            let template = templateHTML(title, list, 
+              `<h2>${title}</h2>${description}`,
+              `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
             response.writeHead(200);
             response.end(template);
           });
@@ -76,7 +79,7 @@ let app = http.createServer((request,response) => {
               <input type="submit">
             </p>
             </form>
-          `);
+          `, "");
           response.writeHead(200);
           response.end(template);
         });
@@ -89,9 +92,11 @@ let app = http.createServer((request,response) => {
       request.on("end", () => {
         let title = new URLSearchParams(body).get("title");
         let description = new URLSearchParams(body).get("description");
+        fs.writeFile(`data/${title}`, description, "utf8", (err) => {
+          response.writeHead(302, {Location: `/?id=${title}`});
+          response.end();
+        });
       });
-      response.writeHead(200);
-      response.end("sucess");
     } else {
 
       response.writeHead(404);
