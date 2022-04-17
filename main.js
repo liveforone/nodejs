@@ -58,7 +58,13 @@ let app = http.createServer((request,response) => {
             let list = templateList(fileList);
             let template = templateHTML(title, list, 
               `<h2>${title}</h2>${description}`,
-              `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
+              `<a href="/create">create</a> 
+               <a href="/update?id=${title}">update</a>
+               <form action="delete_process" method="post">
+                <input type="hidden" name="id" value="${title}">
+                <input type="submit" value="delete">
+               </form>`);
+               //삭제할땐 무조건 method="post"로 해야한다. 절대 링크방식의 get을 사용하면 안된다.
             response.writeHead(200);
             response.end(template);
           });
@@ -136,6 +142,19 @@ let app = http.createServer((request,response) => {
             response.writeHead(302, {Location: `/?id=${title}`});
             response.end();
           });
+        });
+      });
+    } else if (pathname === "/delete_process") {
+      let body = "";
+      request.on("data", (data) => {
+        body += data;
+      });
+      request.on("end", () => {
+        let post = new URLSearchParams(body);
+        let id = post.get("id");
+        fs.unlink(`data/${id}`, (err) => {
+          response.writeHead(302, {Location: `/`});
+          response.end();
         });
       });
     } else {
