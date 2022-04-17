@@ -2,34 +2,7 @@ let http = require('http');
 let fs = require('fs');
 let url = require("url");
 let qs = require("querystring");
-
-let template = {
-  html : (title, list, body, control) => {
-    return `<!doctype html>
-    <html>
-      <head>
-      <title>WEB1 - ${title}</title>
-        <meta charset="utf-8">
-      </head>
-      <body>
-        <h1><a href="/">WEB</a></h1>
-        ${list}
-        ${control}
-        ${body}
-      </body>
-    </html>`;
-  },
-  list : (fileList) => {
-    let list = "<ul>";
-    let i = 0;
-    while (i < fileList.length) {
-      list += `<li><a href="/?id=${fileList[i]}">${fileList[i]}</a></li>`;
-      i += 1;
-    }
-    list = list + "</ul>";
-    return list;
-  }
-};
+let template = require("./lib/template.js");
 
 let app = http.createServer((request,response) => {
     let _url = request.url;
@@ -72,17 +45,8 @@ let app = http.createServer((request,response) => {
         fs.readFile(`data/${queryData.get("id")}`, 'utf8', (err, description) => {
           let title = "WEB-create";
           let list = template.list(fileList);
-          let html = template.html(title, list, `
-            <form action="/create_process" method="post">
-            <p><input type="text" name="title" placeholder="title"></p>
-            <p>
-              <textarea name="description" placeholder="description"></textarea>
-            </p>
-            <p>
-              <input type="submit">
-            </p>
-            </form>
-          `, "");
+          let templateBody = require("./lib/templateBody.js");
+          let html = template.html(title, list, templateBody.templateCbody(), "");
           response.writeHead(200);
           response.end(html);
         });
@@ -104,21 +68,10 @@ let app = http.createServer((request,response) => {
     } else if (pathname === "/update") {
       fs.readdir('./data', (error, fileList) => {
         fs.readFile(`data/${queryData.get("id")}`, 'utf8', (err, description) => {
-          let title = queryData.get("id");
+          let title = queryData.get("id")
           let list = template.list(fileList);
-          let html = template.html(title, list, 
-            `
-            <form action="/update_process" method="post">
-            <input type="hidden" name="id" value="${title}">
-            <p><input type="text" name="title" placeholder="title" value="${title}"></p>
-            <p>
-              <textarea name="description" placeholder="description">${description}</textarea>
-            </p>
-            <p>
-              <input type="submit">
-            </p>
-            </form>
-            `,
+          let templateBody = require("./lib/templateBody.js");
+          let html = template.html(title, list, templateBody.templateUbody(title, description),
             `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
           response.writeHead(200);
           response.end(html);
