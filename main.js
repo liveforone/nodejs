@@ -4,12 +4,13 @@ let url = require("url");
 let qs = require("querystring");
 let template = require("./lib/template.js");
 let templateBody = require("./lib/templateBody.js");
+let path = require("path");
 
 let app = http.createServer((request,response) => {
     let _url = request.url;
     let queryData = new URL("http://localhost:3000" + _url).searchParams;
     let pathname = new URL("http://localhost:3000" + _url).pathname;
-    
+
     if  (pathname === "/") {
       if (queryData.get("id") === null) {
         fs.readdir("./data", (err, fileList) => {
@@ -24,7 +25,8 @@ let app = http.createServer((request,response) => {
         });
       } else {
         fs.readdir('./data', (error, fileList) => {
-          fs.readFile(`data/${queryData.get("id")}`, 'utf8', (err, description) => {
+          let filteredId = path.parse(queryData.get("id")).base;  //id값을 찾지 못하도록 처리함
+          fs.readFile(`data/${filteredId}`, 'utf8', (err, description) => {
             let title = queryData.get("id");
             let list = template.list(fileList);
             let html = template.html(title, list, 
@@ -67,7 +69,8 @@ let app = http.createServer((request,response) => {
       });
     } else if (pathname === "/update") {
       fs.readdir('./data', (error, fileList) => {
-        fs.readFile(`data/${queryData.get("id")}`, 'utf8', (err, description) => {
+        let filteredId = path.parse(queryData.get("id")).base;  //id값을 찾지 못하도록 처리함
+        fs.readFile(`data/${filteredId}`, 'utf8', (err, description) => {
           let title = queryData.get("id")
           let list = template.list(fileList);
           let html = template.html(title, list, templateBody.templateUbody(title, description),
@@ -101,7 +104,8 @@ let app = http.createServer((request,response) => {
       request.on("end", () => {
         let post = new URLSearchParams(body);
         let id = post.get("id");
-        fs.unlink(`data/${id}`, (err) => {
+        let filteredId = path.parse(id).base;  //id값을 찾지 못하도록 처리함
+        fs.unlink(`data/${filteredId}`, (err) => {
           response.writeHead(302, {Location: `/`});
           response.end();
         });
