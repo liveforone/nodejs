@@ -5,6 +5,7 @@ let qs = require("querystring");
 let template = require("./lib/template.js");
 let templateBody = require("./lib/templateBody.js");
 let path = require("path");
+let senitizeHtml = require("sanitize-html");
 
 let app = http.createServer((request,response) => {
     let _url = request.url;
@@ -28,13 +29,17 @@ let app = http.createServer((request,response) => {
           let filteredId = path.parse(queryData.get("id")).base;  //id값을 찾지 못하도록 처리함
           fs.readFile(`data/${filteredId}`, 'utf8', (err, description) => {
             let title = queryData.get("id");
+            let senitizedTitle = senitizeHtml(title);
+            let senitizedDescription = senitizeHtml(description, {
+              allowedTags : ["h1"]
+            });
             let list = template.list(fileList);
             let html = template.html(title, list, 
-              `<h2>${title}</h2>${description}`,
+              `<h2>${senitizedTitle}</h2>${senitizedDescription}`,
               `<a href="/create">create</a> 
-               <a href="/update?id=${title}">update</a>
+               <a href="/update?id=${senitizedTitle}">update</a>
                <form action="delete_process" method="post">
-                <input type="hidden" name="id" value="${title}">
+                <input type="hidden" name="id" value="${senitizedTitle}">
                 <input type="submit" value="delete">
                </form>`);
                //삭제할땐 무조건 method="post"로 해야한다. 절대 링크방식의 get을 사용하면 안된다.
