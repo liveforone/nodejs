@@ -3,6 +3,7 @@ let fs = require('fs');
 let url = require("url");
 let qs = require("querystring");
 let template = require("./lib/template.js");
+let templateBody = require("./lib/templateBody.js");
 
 let app = http.createServer((request,response) => {
     let _url = request.url;
@@ -45,7 +46,6 @@ let app = http.createServer((request,response) => {
         fs.readFile(`data/${queryData.get("id")}`, 'utf8', (err, description) => {
           let title = "WEB-create";
           let list = template.list(fileList);
-          let templateBody = require("./lib/templateBody.js");
           let html = template.html(title, list, templateBody.templateCbody(), "");
           response.writeHead(200);
           response.end(html);
@@ -70,7 +70,6 @@ let app = http.createServer((request,response) => {
         fs.readFile(`data/${queryData.get("id")}`, 'utf8', (err, description) => {
           let title = queryData.get("id")
           let list = template.list(fileList);
-          let templateBody = require("./lib/templateBody.js");
           let html = template.html(title, list, templateBody.templateUbody(title, description),
             `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
           response.writeHead(200);
